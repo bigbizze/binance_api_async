@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Launch",
+        "args": [],
+        "program": "${workspaceFolder}/target/debug/temp_pump",
+        "windows": {
+            "program": "${workspaceFolder}/target/debug/temp_pump.exe"
+        },
+        "cwd": "${workspaceFolder}",
+        "stopOnEntry": false,
+        "sourceLanguages": ["rust"],
+        "sourceMap": {
+          "/rustc/*": "C:/Users/Charles/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust"
+        }
+      },
+      {
+        "name": "(Windows) Launch",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "initCommands": ["set set target.disable-aslr false"],
+        "program": "${workspaceFolder}/target/debug/temp_pump.exe",
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "sourceFileMap": {
+          "/rustc/5e1a799842ba6ed4a57e91f7ab9435947482f7d8": "${env:USERPROFILE}/.rustup/toolchains/stable-x86_64-pc-windows-msvc/lib/rustlib/src/rust"
+        },
+        "symbolSearchPath": "https://msdl.microsoft.com/download/symbols",
+        "environment": []
+      }
+    ]
+  }
