@@ -131,7 +131,8 @@ async fn individual_trades() -> Result<(), BinanceErr> {
 }
 ```
 
-### Requests
+### HTTP Requests
+*https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md*
 *(Virtually all of this is just altering a fork of https://docs.rs/crate/binance/0.12.3 and making it async)*
 
 ### Market
