@@ -108,6 +108,10 @@ async fn individual_trades() -> Result<(), BinanceErr> {
 ### User Stream
 *https://github.com/binance/binance-spot-api-docs/blob/master/user-data-stream.md*
 ```rust
+use binance_api_async::userstream::{UserStream, UserStreamAsync};
+use binance_api_async::api::Binance;
+use binance_api_async::futures::TryStreamExt;
+use binance_api_async::websocket::WebsocketEvent;
 async fn individual_trades() -> Result<(), BinanceErr> {
     let mut user_stream: UserStream = Binance::new(Some("<api-key>".into()), Some("<api-secret>".into()));
     let sub_id = user_stream.subscribe().await?;
@@ -174,6 +178,9 @@ async fn market() -> Result<(), BinanceErr> {
 
 ### Account
 ```rust
+use binance_api_async::account::Account;
+use binance_api_async::api::Binance;
+use binance_api_async::error::BinanceErr;
 async fn account() -> Result<(), BinanceErr> {
     let api_key = Some("YOUR_API_KEY".into());
     let secret_key = Some("YOUR_SECRET_KEY".into());
