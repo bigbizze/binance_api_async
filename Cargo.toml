@@ -8,7 +8,7 @@ homepage = "https://github.com/bigbizze/binance_api_async"
 documentation = "https://github.com/bigbizze/binance_api_async/blob/master/README.md"
 repository = "https://github.com/bigbizze/binance_api_async"
 readme = "README.md"
-license = "mit"
+license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #exclude = ["."]
 [dependencies]
