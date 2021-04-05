@@ -1,6 +1,6 @@
 [package]
 name = "binance_api_async"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Charles Anderson <hpcngmoh@gmail.com>"]
 edition = "2018"
 description = "Binance API async implementation using tokio"
