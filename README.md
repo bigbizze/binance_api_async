@@ -10,7 +10,8 @@ use binance_ws::websocket::*;
 use binance_ws::futures::TryStreamExt;
 use binance_ws::api::Binance;
 
-async fn individual_trades() -> Result<(), BinanceErr> {
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
 
     let symbols = vec!["ETHBTC".into(), "ADABTC".into()];
 
@@ -60,12 +61,15 @@ use binance_ws::websocket::*;
 use binance_ws::futures::TryStreamExt;
 use binance_ws::api::Binance;
 
-async fn individual_trades() -> Result<(), BinanceErr> {
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
     let symbols = vec!["ETHBTC".into(), "ADABTC".into()];
 
     let mut binance_ws: Websocket = Binance::new(None, None);
-    let sub_id = binance_ws.subscribe(WebsocketStreamType::Kline { interval: Some(KlineInterval::Minutes(5)), symbols }).await?;
-
+    let interval = KlineInterval::Minutes(5);
+    // OR let interval = KlineInterval::None;
+    let sub_id = binance_ws.subscribe(WebsocketStreamType::Kline { interval, symbols }).await?;
+    
     while let Some(event) = binance_ws.try_next().await.expect("Didn't receive next transmit") {
         match event {
             WebsocketEvent::Kline(kline) => {
@@ -86,7 +90,8 @@ use binance_ws::futures::TryStreamExt;
 use binance_ws::api::Binance;
 use binance_ws::userstream::{UserStream, UserStreamAsync};
 
-async fn individual_trades() -> Result<(), BinanceErr> {
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
     let mut binance_ws: Websocket = Binance::new(None, None);
     let sub_id = binance_ws.subscribe(WebsocketStreamType::DayTickerAll).await?;
 
@@ -112,7 +117,9 @@ use binance_api_async::userstream::{UserStream, UserStreamAsync};
 use binance_api_async::api::Binance;
 use binance_api_async::futures::TryStreamExt;
 use binance_api_async::websocket::WebsocketEvent;
-async fn individual_trades() -> Result<(), BinanceErr> {
+
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
     let mut user_stream: UserStream = Binance::new(Some("<api-key>".into()), Some("<api-secret>".into()));
     let sub_id = user_stream.subscribe().await?;
     let mut binance_ws = user_stream.ws.as_mut().expect("You didn't subscribe!");
@@ -145,7 +152,8 @@ async fn individual_trades() -> Result<(), BinanceErr> {
 use binance::api::*;
 use binance::market::*;
 
-async fn market() -> Result<(), BinanceErr> {
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
     let market: Market = Binance::new(None, None);
 
     // Order book at default depth
@@ -181,7 +189,9 @@ async fn market() -> Result<(), BinanceErr> {
 use binance_api_async::account::Account;
 use binance_api_async::api::Binance;
 use binance_api_async::error::BinanceErr;
-async fn account() -> Result<(), BinanceErr> {
+
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
     let api_key = Some("YOUR_API_KEY".into());
     let secret_key = Some("YOUR_SECRET_KEY".into());
 

@@ -50,12 +50,8 @@ impl ExchangeSettings {
             WebsocketStreamType::DayTickerAll => {
                 vec![format!("!ticker@arr")]
             },
-            WebsocketStreamType::Kline { symbols: s, interval } => {
-                let interval = if let Some(mut t) = interval {
-                    t.format_interval()
-                } else {
-                    format!("1m")
-                };
+            WebsocketStreamType::Kline { symbols: s, mut interval } => {
+                let interval = interval.format_interval();
                 s.into_iter().map(|e| format!("{}@kline_{}", e.to_lowercase(), interval)).collect()
             },
             WebsocketStreamType::PartialBookDepthStream(s) => {
@@ -88,7 +84,8 @@ pub enum KlineInterval {
     Hours(u16),
     Days(u16),
     Weeks(u16),
-    Months(u16)
+    Months(u16),
+    None
 }
 
 impl KlineInterval {
@@ -99,6 +96,7 @@ impl KlineInterval {
             KlineInterval::Days(t) => format!("{}d", t),
             KlineInterval::Weeks(t) => format!("{}w", t),
             KlineInterval::Months(t) => format!("{}M", t),
+            KlineInterval::None => format!("1m")
         }
     }
 }
@@ -109,7 +107,7 @@ pub enum WebsocketStreamType {
     IndividualTrade(Vec<String>),
     PartialBookDepthStream(Vec<String>),
     TwentyFourHourTicker(Vec<String>),
-    Kline { symbols: Vec<String>, interval: Option<KlineInterval> },
+    Kline { symbols: Vec<String>, interval: KlineInterval },
     DiffDepthStream(Vec<String>),
     DayTickerAll,
     UserStream(String)
