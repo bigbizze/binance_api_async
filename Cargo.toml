@@ -7,7 +7,7 @@ description = "Binance API async implementation using tokio"
 homepage = "https://github.com/bigbizze/binance_api_async"
 documentation = "https://github.com/bigbizze/binance_api_async/blob/master/README.md"
 repository = "https://github.com/bigbizze/binance_api_async"
-readme = "https://github.com/bigbizze/binance_api_async/blob/master/README.md"
+readme = "README.md"
 license = "mit"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #exclude = ["."]
