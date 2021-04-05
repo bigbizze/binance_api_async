@@ -25,7 +25,7 @@ impl Display for BinanceContentError {
 }
 
 #[derive(Fail, Debug)]
-pub enum APIError {
+pub enum BinanceErr {
     #[fail(display = "Serde issue parsing error {}", _0)]
     Serde(#[fail(cause)] serde_json::Error),
     #[fail(display = "Websocket error {}", _0)]
@@ -45,40 +45,40 @@ pub enum APIError {
 
 }
 
-impl APIError {}
+impl BinanceErr {}
 
-impl From<reqwest::Error> for APIError {
+impl From<reqwest::Error> for BinanceErr {
     fn from(err: reqwest::Error) -> Self {
-        APIError::HTTP(err)
+        BinanceErr::HTTP(err)
     }
 }
 
-impl From<serde_json::Error> for APIError {
+impl From<serde_json::Error> for BinanceErr {
     fn from(err: serde_json::Error) -> Self {
-        APIError::Serde(err)
+        BinanceErr::Serde(err)
     }
 }
 
-impl From<tokio_tungstenite::tungstenite::Error> for APIError {
+impl From<tokio_tungstenite::tungstenite::Error> for BinanceErr {
     fn from(err: tokio_tungstenite::tungstenite::Error) -> Self {
-        APIError::Websocket(err)
+        BinanceErr::Websocket(err)
     }
 }
 
-impl From<std::io::Error> for APIError {
+impl From<std::io::Error> for BinanceErr {
     fn from(err: Error) -> Self {
-        APIError::IoError(err)
+        BinanceErr::IoError(err)
     }
 }
 
-impl From<reqwest::header::InvalidHeaderValue> for APIError {
+impl From<reqwest::header::InvalidHeaderValue> for BinanceErr {
     fn from(err: reqwest::header::InvalidHeaderValue) -> Self {
-        APIError::InvalidHeaderValue(err)
+        BinanceErr::InvalidHeaderValue(err)
     }
 }
 
-impl From<std::time::SystemTimeError> for APIError {
+impl From<std::time::SystemTimeError> for BinanceErr {
     fn from(err: std::time::SystemTimeError) -> Self {
-        APIError::SystemTimeError(err)
+        BinanceErr::SystemTimeError(err)
     }
 }

@@ -11,14 +11,14 @@ pub struct General {
 
 impl General {
     // Test connectivity
-    pub async fn ping(&self) -> Result<String, APIError> {
+    pub async fn ping(&self) -> Result<String, BinanceErr> {
         self.client.get("/api/v3/ping", "").await?;
 
         Ok("pong".into())
     }
 
     // Check server time
-    pub async fn get_server_time(&self) -> Result<ServerTime, APIError> {
+    pub async fn get_server_time(&self) -> Result<ServerTime, BinanceErr> {
         let data: String = self.client.get("/api/v3/time", "").await?;
 
         let server_time: ServerTime = from_str(data.as_str())?;
@@ -28,7 +28,7 @@ impl General {
 
     // Obtain exchange information
     // - Current exchange trading rules and symbol information
-    pub async fn exchange_info(&self) -> Result<ExchangeInformation, APIError> {
+    pub async fn exchange_info(&self) -> Result<ExchangeInformation, BinanceErr> {
         let data: String = self.client.get("/api/v3/exchangeInfo", "").await?;
 
         let info: ExchangeInformation = from_str(data.as_str())?;
@@ -37,7 +37,7 @@ impl General {
     }
 
     // Get Symbol information
-    pub async fn get_symbol_info<S>(&self, symbol: S) -> Result<Symbol, APIError>
+    pub async fn get_symbol_info<S>(&self, symbol: S) -> Result<Symbol, BinanceErr>
     where
         S: Into<String>,
     {
@@ -49,7 +49,7 @@ impl General {
                         return Ok(item);
                     }
                 }
-                Err(APIError::Other(format!("Symbol not found")))
+                Err(BinanceErr::Other(format!("Symbol not found")))
             }
             Err(e) => Err(e),
         }

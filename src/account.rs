@@ -37,7 +37,7 @@ struct OrderRequest {
 
 impl Account {
     // Account Information
-    pub async fn get_account(&self) -> Result<AccountInformation, APIError> {
+    pub async fn get_account(&self) -> Result<AccountInformation, BinanceErr> {
         let parameters: BTreeMap<String, String> = BTreeMap::new();
 
         let request = build_signed_request(parameters, self.recv_window)?;
@@ -48,7 +48,7 @@ impl Account {
     }
 
     // Balance for ONE Asset
-    pub async fn get_balance<S>(&self, asset: S) -> Result<Balance, APIError>
+    pub async fn get_balance<S>(&self, asset: S) -> Result<Balance, BinanceErr>
     where
         S: Into<String>,
     {
@@ -60,14 +60,14 @@ impl Account {
                         return Ok(balance);
                     }
                 }
-                Err(APIError::Other(format!("Asset not found")))
+                Err(BinanceErr::Other(format!("Asset not found")))
             }
             Err(e) => Err(e),
         }
     }
 
     // Current open orders for ONE symbol
-    pub async fn get_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, APIError>
+    pub async fn get_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, BinanceErr>
     where
         S: Into<String>,
     {
@@ -82,7 +82,7 @@ impl Account {
     }
 
     // All current open orders
-    pub async fn get_all_open_orders(&self) -> Result<Vec<Order>, APIError> {
+    pub async fn get_all_open_orders(&self) -> Result<Vec<Order>, BinanceErr> {
         let parameters: BTreeMap<String, String> = BTreeMap::new();
 
         let request = build_signed_request(parameters, self.recv_window)?;
@@ -91,7 +91,7 @@ impl Account {
 
         Ok(order)
     }
-    pub async fn cancel_all_open_orders_void<S>(&self, symbol: S) -> Result<(), APIError>
+    pub async fn cancel_all_open_orders_void<S>(&self, symbol: S) -> Result<(), BinanceErr>
         where
             S: Into<String>,
     {
@@ -102,7 +102,7 @@ impl Account {
         Ok(())
     }
     // Cancel all open orders for ONE symbol
-    pub async fn cancel_all_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, APIError>
+    pub async fn cancel_all_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, BinanceErr>
     where
         S: Into<String>,
     {
@@ -116,7 +116,7 @@ impl Account {
     }
 
     // Check an order's status
-    pub async fn order_status<S>(&self, symbol: S, order_id: u64) -> Result<Order, APIError>
+    pub async fn order_status<S>(&self, symbol: S, order_id: u64) -> Result<Order, BinanceErr>
     where
         S: Into<String>,
     {
@@ -134,7 +134,7 @@ impl Account {
     /// Place a test status order
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_order_status<S>(&self, symbol: S, order_id: u64) -> Result<(), APIError>
+    pub async fn test_order_status<S>(&self, symbol: S, order_id: u64) -> Result<(), BinanceErr>
     where
         S: Into<String>,
     {
@@ -150,7 +150,7 @@ impl Account {
     }
 
     // Place a LIMIT order - BUY
-    pub async fn limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, APIError>
+    pub async fn limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -174,7 +174,7 @@ impl Account {
     /// Place a test limit order - BUY
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), APIError>
+    pub async fn test_limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -196,7 +196,7 @@ impl Account {
     }
 
     // Place a LIMIT order - SELL
-    pub async fn limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, APIError>
+    pub async fn limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -220,7 +220,7 @@ impl Account {
     /// Place a test LIMIT order - SELL
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), APIError>
+    pub async fn test_limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -242,7 +242,7 @@ impl Account {
     }
 
     // Place a MARKET order - BUY
-    pub async fn market_buy<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, APIError>
+    pub async fn market_buy<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -266,7 +266,7 @@ impl Account {
     /// Place a test MARKET order - BUY
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_market_buy<S, F>(&self, symbol: S, qty: F) -> Result<(), APIError>
+    pub async fn test_market_buy<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -288,7 +288,7 @@ impl Account {
     }
 
     // Place a MARKET order - SELL
-    pub async fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, APIError>
+    pub async fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -312,7 +312,7 @@ impl Account {
     /// Place a test MARKET order - SELL
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_market_sell<S, F>(&self, symbol: S, qty: F) -> Result<(), APIError>
+    pub async fn test_market_sell<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -343,7 +343,7 @@ impl Account {
         order_side: S,
         order_type: S,
         execution_type: S,
-    ) -> Result<Transaction, APIError>
+    ) -> Result<Transaction, BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -376,7 +376,7 @@ impl Account {
         order_side: S,
         order_type: S,
         execution_type: S,
-    ) -> Result<(), APIError>
+    ) -> Result<(), BinanceErr>
     where
         S: Into<String>,
         F: Into<f64>,
@@ -398,7 +398,7 @@ impl Account {
     }
 
     // Check an order's status
-    pub async fn cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<OrderCanceled, APIError>
+    pub async fn cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<OrderCanceled, BinanceErr>
     where
         S: Into<String>,
     {
@@ -416,7 +416,7 @@ impl Account {
     /// Place a test cancel order
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<(), APIError>
+    pub async fn test_cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<(), BinanceErr>
     where
         S: Into<String>,
     {
@@ -432,7 +432,7 @@ impl Account {
     }
 
     // Trade history
-    pub async fn trade_history<S>(&self, symbol: S) -> Result<Vec<TradeHistory>, APIError>
+    pub async fn trade_history<S>(&self, symbol: S) -> Result<Vec<TradeHistory>, BinanceErr>
     where
         S: Into<String>,
     {

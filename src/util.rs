@@ -16,7 +16,7 @@ pub fn build_request(parameters: &BTreeMap<String, String>) -> String {
 
 pub fn build_signed_request(
     mut parameters: BTreeMap<String, String>, recv_window: u64,
-) -> Result<String, APIError> {
+) -> Result<String, BinanceErr> {
     if recv_window > 0 {
         parameters.insert("recvWindow".into(), recv_window.to_string());
     }
@@ -33,7 +33,7 @@ pub fn build_signed_request(
 
         Ok(request)
     } else {
-        Err(APIError::Other(format!("Failed to get timestamp")))
+        Err(BinanceErr::Other(format!("Failed to get timestamp")))
     }
 }
 
@@ -45,7 +45,7 @@ pub fn to_f64(v: &Value) -> f64 {
     v.as_str().unwrap().parse().unwrap()
 }
 
-fn get_timestamp() -> Result<u64, APIError> {
+fn get_timestamp() -> Result<u64, BinanceErr> {
     let start = SystemTime::now();
     let since_epoch = start.duration_since(UNIX_EPOCH)?;
 

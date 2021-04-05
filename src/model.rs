@@ -354,6 +354,19 @@ pub struct AccountUpdateEvent {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct BalanceUpdateEvent {
+    #[serde(rename = "E")]
+    pub event_time: i64,
+    #[serde(rename = "a")]
+    pub asset: String,
+    #[serde(rename = "d")]
+    pub balance_delta: String,
+    #[serde(rename = "T")]
+    pub clear_time: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct EventBalance {
     #[serde(rename = "a")]
     pub asset: String,

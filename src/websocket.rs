@@ -2,11 +2,11 @@ use tokio_tungstenite::WebSocketStream;
 use tokio::net::TcpStream;
 use crate::model::*;
 use serde::*;
-use serde::*;
+
 use url::Url;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-use crate::error::APIError;
+use crate::error::BinanceErr;
 
 use std::collections::HashMap;
 use streamunordered::{StreamUnordered, StreamYield};
@@ -16,7 +16,8 @@ use uuid::Uuid;
 use futures::{prelude::*, StreamExt, SinkExt, stream::SplitStream};
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use crate::model::*;
+
+
 
 
 type WSStream = WebSocketStream<tokio_tungstenite::stream::Stream<TcpStream, tokio_native_tls::TlsStream<TcpStream>>>;
@@ -35,18 +36,45 @@ impl ExchangeSettings {
     pub fn make_trade_param(endpoint: String) -> String {
         format!("{}@trade", endpoint.to_lowercase())
     }
+    pub fn map_symbols_to_stream_params(stream_type: WebsocketStreamType) -> Vec<String> {
+        match stream_type {
+            WebsocketStreamType::IndividualTrade(s) => {
+                s.into_iter().map(|e| format!("{}@trade", e.to_lowercase())).collect()
+            },
+            WebsocketStreamType::AggregatedTrades(s) => {
+                s.into_iter().map(|e| format!("{}@aggTrade", e.to_lowercase())).collect()
+            },
+            WebsocketStreamType::TwentyFourHourTicker(s) => {
+                s.into_iter().map(|e| format!("{}@24hrTicker", e.to_lowercase())).collect()
+            },
+            WebsocketStreamType::DayTickerAll => {
+                vec![format!("!ticker@arr")]
+            },
+            WebsocketStreamType::Kline { symbols: s, interval } => {
+                let interval = if let Some(mut t) = interval {
+                    t.format_interval()
+                } else {
+                    format!("1m")
+                };
+                s.into_iter().map(|e| format!("{}@kline_{}", e.to_lowercase(), interval)).collect()
+            },
+            WebsocketStreamType::PartialBookDepthStream(s) => {
+                s.into_iter().map(|e| format!("{}@lastUpdateId", e.to_lowercase())).collect()
+            },
+            WebsocketStreamType::DiffDepthStream(s) => {
+                s.into_iter().map(|e| format!("{}@depthUpdate", e.to_lowercase())).collect()
+            },
+            WebsocketStreamType::BookTicker(s) => {
+                s.into_iter().map(|e| format!("{}@bookTicker", e.to_lowercase())).collect()
+            },
+            _ => vec![]
+        }
+    }
 }
 
-impl From<BinanceSymbol> for ExchangeSettings {
-    fn from(f: BinanceSymbol) -> Self {
-        let params: Vec<String> = match f {
-            BinanceSymbol::Multiple(endpoints) => {
-                endpoints.into_iter().map(|e| ExchangeSettings::make_trade_param(e)).collect()
-            }
-            BinanceSymbol::One(endpoint) => {
-                vec![ExchangeSettings::make_trade_param(endpoint)]
-            }
-        };
+impl From<WebsocketStreamType> for ExchangeSettings {
+    fn from(f: WebsocketStreamType) -> Self {
+        let params =  ExchangeSettings::map_symbols_to_stream_params(f);
         ExchangeSettings {
             method: METHOD,
             params,
@@ -55,29 +83,107 @@ impl From<BinanceSymbol> for ExchangeSettings {
     }
 }
 
-pub enum BinanceSymbol {
-    Multiple(Vec<String>),
-    One(String)
+pub enum KlineInterval {
+    Minutes(u16),
+    Hours(u16),
+    Days(u16),
+    Weeks(u16),
+    Months(u16)
+}
+
+impl KlineInterval {
+    pub fn format_interval(&mut self) -> String {
+        match self {
+            KlineInterval::Minutes(t) => format!("{}m", t),
+            KlineInterval::Hours(t) => format!("{}h", t),
+            KlineInterval::Days(t) => format!("{}d", t),
+            KlineInterval::Weeks(t) => format!("{}w", t),
+            KlineInterval::Months(t) => format!("{}M", t),
+        }
+    }
+}
+
+pub enum WebsocketStreamType {
+    BookTicker(Vec<String>),
+    AggregatedTrades(Vec<String>),
+    IndividualTrade(Vec<String>),
+    PartialBookDepthStream(Vec<String>),
+    TwentyFourHourTicker(Vec<String>),
+    Kline { symbols: Vec<String>, interval: Option<KlineInterval> },
+    DiffDepthStream(Vec<String>),
+    DayTickerAll,
+    UserStream(String)
+}
+
+pub enum UserDataStreamType {
+    AccountUpdate,
+    OrderUpdate,
+    BalanceUpdate,
+}
+
+impl WebsocketStreamType {
+    pub fn first(&mut self) -> String {
+        match self {
+            WebsocketStreamType::AggregatedTrades(s) => s[0].clone(),
+            WebsocketStreamType::IndividualTrade(s) => s[0].clone(),
+            WebsocketStreamType::PartialBookDepthStream(s) => s[0].clone(),
+            WebsocketStreamType::TwentyFourHourTicker(s) => s[0].clone(),
+            WebsocketStreamType::DayTickerAll => format!("!ticker@arr"),
+            WebsocketStreamType::Kline { symbols: s, .. } => s[0].clone(),
+            WebsocketStreamType::DiffDepthStream(s) => s[0].clone(),
+            WebsocketStreamType::BookTicker(s) => s[0].clone(),
+            WebsocketStreamType::UserStream(listen_key) => listen_key.clone()
+        }
+    }
+    pub fn len(&mut self) -> usize {
+        match self {
+            WebsocketStreamType::AggregatedTrades(s) => s.len(),
+            WebsocketStreamType::IndividualTrade(s) => s.len(),
+            WebsocketStreamType::PartialBookDepthStream(s) => s.len(),
+            WebsocketStreamType::TwentyFourHourTicker(s) => s.len(),
+            WebsocketStreamType::DayTickerAll => 1,
+            WebsocketStreamType::Kline { symbols: s, .. } => s.len(),
+            WebsocketStreamType::DiffDepthStream(s) => s.len(),
+            WebsocketStreamType::BookTicker(s) => s.len(),
+            WebsocketStreamType::UserStream(_) => 1
+        }
+    }
 }
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Serialize, Debug, Deserialize)]
 pub enum WebsocketEvent {
-    AccountUpdate(AccountUpdateEvent),
-    OrderTrade(OrderTradeEvent),
-    Trade(TradesEvent),
-    OneTrade(OneTradeEvent),
-    OrderBook(OrderBook),
-    DayTicker(DayTickerEvent),
+    AggregatedTrades(TradesEvent),
+    IndividualTrade(OneTradeEvent),
+    TwentyFourHourTicker(DayTickerEvent),
     DayTickerAll(Vec<DayTickerEvent>),
     Kline(KlineEvent),
-    DepthOrderBook(DepthOrderBookEvent),
+    DiffDepthStream(DepthOrderBookEvent),
+    PartialBookDepthStream(OrderBook),
     BookTicker(BookTickerEvent),
+
+    AccountUpdate(AccountUpdateEvent),
+    OrderUpdate(OrderTradeEvent),
+    BalanceUpdate(BalanceUpdateEvent),
     None
 }
+
+const STREAM: &'static str = "stream";
+
+const AGGREGATED_TRADE: &'static str = "aggTrade";
+const INDIVIDUAL_TRADE: &'static str = "trade";
+const DIFF_DEPTH_ORDER_BOOK: &'static str = "depthUpdate";
+const KLINE: &'static str = "kline";
+const PARTIAL_DEPTH_ORDER_BOOK: &'static str = "lastUpdateId";
+const TWENTY_FOUR_HOUR_TICKER: &'static str = "24hrTicker";
+
+const ACCOUNT_UPDATE: &'static str = "outboundAccountInfo";
+const ORDER_UPDATE: &'static str = "executionReport";
+const BALANCE_UPDATE: &'static str = "balanceUpdate";
+
 #[pin_project]
 #[derive(Default)]
-pub struct BinanceWs {
+pub struct Websocket {
     subscribe_single_value: Option<String>,
     subscriptions: HashMap<Uuid, usize>,
     tokens: HashMap<usize, Uuid>,
@@ -85,28 +191,18 @@ pub struct BinanceWs {
     streams: StreamUnordered<StoredStream>,
 }
 
-const OUTBOUND_ACCOUNT_INFO: &'static str = "outboundAccountInfo";
-const EXECUTION_REPORT: &'static str = "executionReport";
-const DEPTH_ORDER_BOOK: &'static str = "depthUpdate";
-const KLINE: &'static str = "kline";
-const PARTIAL_ORDER_BOOK: &'static str = "lastUpdateId";
-const AGGREGATED_TRADE: &'static str = "aggTrade";
-const DAYTICKER: &'static str = "24hrTicker";
-const STREAM: &'static str = "stream";
-const TRADE: &'static str = "trade";
-
-impl BinanceWs {
+impl Websocket {
     pub fn new() -> Self {
-        BinanceWs::default()
+        Websocket::default()
     }
-    pub fn parse_response_type(&mut self, msg: &str) -> Result<WebsocketEvent, APIError> {
+    pub fn parse_response_type(&mut self, msg: &str) -> Result<WebsocketEvent, BinanceErr> {
         let value: serde_json::Value = serde_json::from_str(msg)?;
         return Ok(if msg.find(STREAM) != None {
             if value["data"] != serde_json::Value::Null {
                 let data = format!("{}", value["data"]);
                 self.parse_response_type(&data)?
             } else {
-                return Err(APIError::Other(format!("Websocket closed!")))
+                return Err(BinanceErr::Other(format!("Websocket closed!")))
             }
         } else if value["u"] != serde_json::Value::Null
             && value["s"] != serde_json::Value::Null
@@ -117,19 +213,22 @@ impl BinanceWs {
         {
             let book_ticker: BookTickerEvent = serde_json::from_str(msg)?;
             WebsocketEvent::BookTicker(book_ticker)
-        } else if msg.find(TRADE) != None {
+        } else if msg.find(INDIVIDUAL_TRADE) != None {
             let trade: OneTradeEvent = serde_json::from_str(msg)?;
-            WebsocketEvent::OneTrade(trade)
-        } else if msg.find(OUTBOUND_ACCOUNT_INFO) != None {
+            WebsocketEvent::IndividualTrade(trade)
+        } else if msg.find(ACCOUNT_UPDATE) != None {
             let account_update: AccountUpdateEvent = serde_json::from_str(msg)?;
             WebsocketEvent::AccountUpdate(account_update)
-        } else if msg.find(EXECUTION_REPORT) != None {
+        } else if msg.find(BALANCE_UPDATE) != None {
+            let balance_update: BalanceUpdateEvent = serde_json::from_str(msg)?;
+            WebsocketEvent::BalanceUpdate(balance_update)
+        } else if msg.find(ORDER_UPDATE) != None {
             let order_trade: OrderTradeEvent = serde_json::from_str(msg)?;
-            WebsocketEvent::OrderTrade(order_trade)
+            WebsocketEvent::OrderUpdate(order_trade)
         } else if msg.find(AGGREGATED_TRADE) != None {
             let trade: TradesEvent = serde_json::from_str(msg)?;
-            WebsocketEvent::Trade(trade)
-        } else if msg.find(DAYTICKER) != None {
+            WebsocketEvent::AggregatedTrades(trade)
+        } else if msg.find(TWENTY_FOUR_HOUR_TICKER) != None {
             if let Some(single_value) = &self.subscribe_single_value {
                 if single_value == "!ticker@arr" {
                     let trades: Vec<DayTickerEvent> = serde_json::from_str(msg)?;
@@ -137,42 +236,43 @@ impl BinanceWs {
                 }
             }
             let trades: DayTickerEvent = serde_json::from_str(msg)?;
-            WebsocketEvent::DayTicker(trades)
+            WebsocketEvent::TwentyFourHourTicker(trades)
         } else if msg.find(KLINE) != None {
             let kline: KlineEvent = serde_json::from_str(msg)?;
             WebsocketEvent::Kline(kline)
-        } else if msg.find(PARTIAL_ORDER_BOOK) != None {
+        } else if msg.find(PARTIAL_DEPTH_ORDER_BOOK) != None {
             let partial_orderbook: OrderBook = serde_json::from_str(msg)?;
-            WebsocketEvent::OrderBook(partial_orderbook)
-        } else if msg.find(DEPTH_ORDER_BOOK) != None {
+            WebsocketEvent::PartialBookDepthStream(partial_orderbook)
+        } else if msg.find(DIFF_DEPTH_ORDER_BOOK) != None {
             let depth_orderbook: DepthOrderBookEvent = serde_json::from_str(msg)?;
-            WebsocketEvent::DepthOrderBook(depth_orderbook)
+            WebsocketEvent::DiffDepthStream(depth_orderbook)
         } else {
             WebsocketEvent::None
         });
     }
-    pub fn parse_message(&mut self, msg: Message) -> Result<WebsocketEvent, APIError> {
+    pub fn parse_message(&mut self, msg: Message) -> Result<WebsocketEvent, BinanceErr> {
         return match msg {
             Message::Text(msg) => self.parse_response_type(&msg),
             Message::Ping(_) | Message::Pong(_) | Message::Binary(_) => Ok(WebsocketEvent::None),
-            Message::Close(_) => Err(APIError::Other(format!("Websocket closed!")))
+            Message::Close(_) => Err(BinanceErr::Other(format!("Websocket closed!")))
         };
 
     }
 }
 
 const WEBSOCKET_BINANCE_URL: &'static str = "wss://stream.binance.com:9443/stream";
+
 #[async_trait::async_trait]
-pub trait BinanceWsAsync {
-    async fn subscribe(&mut self, endpoint: BinanceSymbol) -> Result<Uuid, APIError>;
+pub trait WebsocketAsync {
+    async fn subscribe(&mut self, endpoint: WebsocketStreamType) -> Result<Uuid, BinanceErr>;
     fn unsubscribe(&mut self, uuid: Uuid) -> Option<StoredStream>;
 }
 
 #[async_trait::async_trait]
-impl BinanceWsAsync for BinanceWs {
-    async fn subscribe(&mut self, endpoints: BinanceSymbol) -> Result<Uuid, APIError> {
-        self.subscribe_single_value = if let BinanceSymbol::One(s) = &endpoints {
-            Some(s.clone())
+impl WebsocketAsync for Websocket {
+    async fn subscribe(&mut self, mut stream_type: WebsocketStreamType) -> Result<Uuid, BinanceErr> {
+        self.subscribe_single_value = if stream_type.len() == 1 {
+            Some(stream_type.first())
         } else {
             None
         };
@@ -181,9 +281,10 @@ impl BinanceWsAsync for BinanceWs {
 
         let (mut sink, read) = ws_stream.split();
 
-        let sub = ExchangeSettings::from(endpoints);
-
-        sink.send(Message::Text(serde_json::to_string(&sub)?)).await?;
+        if let WebsocketStreamType::UserStream(_) = stream_type {} else {
+            let sub = ExchangeSettings::from(stream_type);
+            sink.send(Message::Text(serde_json::to_string(&sub)?)).await?;
+        }
 
         let uuid = Uuid::new_v4();
         let token = self.streams.insert(read);
@@ -200,16 +301,15 @@ impl BinanceWsAsync for BinanceWs {
     }
 }
 
-impl Stream for BinanceWs {
-    type Item = Result<WebsocketEvent, APIError>;
+impl Stream for Websocket {
+    type Item = Result<WebsocketEvent, BinanceErr>;
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.as_mut().project().streams.poll_next(cx) {
             Poll::Ready(Some((y, _))) => match y {
                 StreamYield::Item(item) => {
-                    // let heartbeat = self.heartbeats.get_mut(&token).unwrap();
                     Poll::Ready({
                         Some(
-                            item.map_err(APIError::Websocket)
+                            item.map_err(BinanceErr::Websocket)
                                 .and_then(|m| self.parse_message(m)),
                         )
                     })
@@ -227,25 +327,23 @@ impl Stream for BinanceWs {
 #[cfg(test)]
 mod tests {
     use futures::TryStreamExt;
-    use crate::error::APIError;
-    use crate::model::*;
+    use crate::error::BinanceErr;
+
     use crate::websocket::*;
-    use crate::api::Binance;
-    use crate::account::Account;
 
     fn correct_symbol(res: WebsocketEvent) -> bool {
-        if let WebsocketEvent::OneTrade(trade) = res {
+        if let WebsocketEvent::IndividualTrade(trade) = res {
             trade.symbol == "ADABTC" || trade.symbol == "ETHBTC"
         } else {
             false
         }
     }
 
-    async fn test_binance_ws() -> Result<(), APIError> {
-        let mut binance_ws = BinanceWs::new();
+    async fn test_binance_ws() -> Result<(), BinanceErr> {
+        let mut binance_ws = Websocket::new();
         let endpoints = vec!["ETHBTC".into(), "ADABTC".into()];
-        let sub_uuid = binance_ws.subscribe(BinanceSymbol::Multiple(endpoints)).await?;
-        for i in 0..5 {
+        let sub_uuid = binance_ws.subscribe(WebsocketStreamType::IndividualTrade(endpoints)).await?;
+        for _ in 0..5 {
             let res = binance_ws.try_next().await.expect("Didn't receive next transmit");
             let res = res.expect("Got no match for trade type!");
             if let WebsocketEvent::None = res {
@@ -253,12 +351,13 @@ mod tests {
             }
             assert!(correct_symbol(res));
         }
+        binance_ws.unsubscribe(sub_uuid);
         Ok(())
     }
 
     #[tokio::main]
     #[test]
     async fn it_works() {
-        test_binance_ws().await;
+        test_binance_ws().await.ok();
     }
 }

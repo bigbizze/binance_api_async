@@ -5,7 +5,7 @@ use reqwest::{StatusCode, Response};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
 use sha2::Sha256;
 
-use crate::error::{APIError, BinanceContentError};
+use crate::error::{BinanceErr, BinanceContentError};
 
 
 #[derive(Clone)]
@@ -24,7 +24,7 @@ impl Client {
         }
     }
 
-    pub async fn get_signed(&self, endpoint: &str, request: &str) -> Result<String, APIError> {
+    pub async fn get_signed(&self, endpoint: &str, request: &str) -> Result<String, BinanceErr> {
         let url = self.sign_request(endpoint, request).await;
         let client = reqwest::Client::new();
         let response = client
@@ -36,7 +36,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn post_signed(&self, endpoint: &str, request: &str) -> Result<String, APIError> {
+    pub async fn post_signed(&self, endpoint: &str, request: &str) -> Result<String, BinanceErr> {
         let url = self.sign_request(endpoint, request).await;
         let client = reqwest::Client::new();
         let response = client
@@ -48,7 +48,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn delete_signed(&self, endpoint: &str, request: &str) -> Result<String, APIError> {
+    pub async fn delete_signed(&self, endpoint: &str, request: &str) -> Result<String, BinanceErr> {
         let url = self.sign_request(endpoint, request).await;
         let client = reqwest::Client::new();
         let response = client
@@ -60,7 +60,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn get(&self, endpoint: &str, request: &str) -> Result<String, APIError> {
+    pub async fn get(&self, endpoint: &str, request: &str) -> Result<String, BinanceErr> {
         let mut url: String = format!("{}{}", self.host, endpoint);
         if !request.is_empty() {
             url.push_str(format!("?{}", request).as_str());
@@ -71,7 +71,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn post(&self, endpoint: &str) -> Result<String, APIError> {
+    pub async fn post(&self, endpoint: &str) -> Result<String, BinanceErr> {
         let url: String = format!("{}{}", self.host, endpoint);
 
         let client = reqwest::Client::new();
@@ -84,7 +84,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn put(&self, endpoint: &str, listen_key: &str) -> Result<String, APIError> {
+    pub async fn put(&self, endpoint: &str, listen_key: &str) -> Result<String, BinanceErr> {
         let url: String = format!("{}{}", self.host, endpoint);
         let data: String = format!("listenKey={}", listen_key);
 
@@ -99,7 +99,7 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn delete(&self, endpoint: &str, listen_key: &str) -> Result<String, APIError> {
+    pub async fn delete(&self, endpoint: &str, listen_key: &str) -> Result<String, BinanceErr> {
         let url: String = format!("{}{}", self.host, endpoint);
         let data: String = format!("listenKey={}", listen_key);
 
@@ -124,7 +124,7 @@ impl Client {
         url
     }
 
-    fn build_headers(&self, content_type: bool) -> Result<HeaderMap, APIError> {
+    fn build_headers(&self, content_type: bool) -> Result<HeaderMap, BinanceErr> {
         let mut custom_headers = HeaderMap::new();
 
         custom_headers.insert(USER_AGENT, HeaderValue::from_static("binance-rs"));
@@ -142,25 +142,25 @@ impl Client {
         Ok(custom_headers)
     }
 
-    async fn handler(&self, response: Response) -> Result<String, APIError> {
+    async fn handler(&self, response: Response) -> Result<String, BinanceErr> {
         match response.status() {
             StatusCode::OK => {
                 Ok(response.text().await?)
             },
             StatusCode::INTERNAL_SERVER_ERROR => {
-                Err(APIError::Other(format!("Internal Server Error")))
+                Err(BinanceErr::Other(format!("Internal Server Error")))
             }
             StatusCode::SERVICE_UNAVAILABLE => {
-                Err(APIError::Other(format!("Service Unavailable")))
+                Err(BinanceErr::Other(format!("Service Unavailable")))
             }
             StatusCode::UNAUTHORIZED => {
-                Err(APIError::Other(format!("Unauthorized")))
+                Err(BinanceErr::Other(format!("Unauthorized")))
             }
             StatusCode::BAD_REQUEST => {
-                Err(APIError::BinanceContent(response.json::<BinanceContentError>().await?))
+                Err(BinanceErr::BinanceContent(response.json::<BinanceContentError>().await?))
             }
             s => {
-                Err(APIError::Other(format!("Received response: {:?}", s)))
+                Err(BinanceErr::Other(format!("Received response: {:?}", s)))
             }
         }
     }
