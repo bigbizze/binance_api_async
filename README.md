@@ -185,16 +185,6 @@ async fn main() -> Result<(), BinanceErr> {
 ```
 
 ### Account
-#### Price & Quantity Precision
-If you call "load_symbol_precision", it will load the precision values for the various symbols on Binance, and  quantities and prices given to the various other methods after this will automatically be truncated to the correct number of decimal places.
-
-Calling this requires a request to Binance, so you probably want to do this ahead of time if speed for placing an order is important.
-```rust
-let account: Account = Binance::new(api_key, secret_key);
-account.load_symbol_precisions().await?;
-```
-
-#### Account methods
 ```rust
 use binance_api_async::account::Account;
 use binance_api_async::api::Binance;
@@ -206,9 +196,7 @@ async fn main() -> Result<(), BinanceErr> {
     let secret_key = Some("YOUR_SECRET_KEY".into());
 
     let account: Account = Binance::new(api_key, secret_key);
-    
-    account.load_symbol_precisions().await?;
-    
+
     let account = account.get_account().await?;
 
     let open_orders = account.get_open_orders("WTCETH").await?;

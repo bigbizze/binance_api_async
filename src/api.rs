@@ -28,7 +28,6 @@ impl Binance for Account {
         Account {
             client: Client::new(api_key, secret_key, API_HOST.to_string()),
             recv_window: 5000,
-            precisions_map: None,
         }
     }
 }
@@ -37,7 +36,7 @@ impl Binance for Market {
     fn new(api_key: Option<String>, secret_key: Option<String>) -> Market {
         Market {
             client: Client::new(api_key, secret_key, API_HOST.to_string()),
-            recv_window: 5000
+            recv_window: 5000,
         }
     }
 }
