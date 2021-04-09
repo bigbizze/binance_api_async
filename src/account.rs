@@ -175,7 +175,7 @@ impl Account {
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(buy).await;
+        let order = self.build_order(buy);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER, &request).await?;
         let transaction: Transaction = from_str(data.as_str())?;
@@ -201,7 +201,7 @@ impl Account {
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(buy).await;
+        let order = self.build_order(buy);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER_TEST, &request).await?;
         let _: TestResponse = from_str(data.as_str())?;
@@ -225,7 +225,7 @@ impl Account {
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER, &request).await?;
         let transaction: Transaction = from_str(data.as_str())?;
@@ -251,7 +251,7 @@ impl Account {
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER_TEST, &request).await?;
         let _: TestResponse = from_str(data.as_str())?;
@@ -275,7 +275,7 @@ impl Account {
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(buy).await;
+        let order = self.build_order(buy);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER, &request).await?;
         let transaction: Transaction = from_str(data.as_str())?;
@@ -301,7 +301,7 @@ impl Account {
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(buy).await;
+        let order = self.build_order(buy);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER_TEST, &request).await?;
         let _: TestResponse = from_str(data.as_str())?;
@@ -325,7 +325,7 @@ impl Account {
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER, &request).await?;
         let transaction: Transaction = from_str(data.as_str())?;
@@ -351,7 +351,7 @@ impl Account {
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER_TEST, &request).await?;
         let _: TestResponse = from_str(data.as_str())?;
@@ -384,7 +384,7 @@ impl Account {
             order_type: order_type.into(),
             time_in_force: execution_type.into(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER, &request).await?;
         let transaction: Transaction = from_str(data.as_str())?;
@@ -419,7 +419,7 @@ impl Account {
             order_type: order_type.into(),
             time_in_force: execution_type.into(),
         };
-        let order = self.build_order(sell).await;
+        let order = self.build_order(sell);
         let request = build_signed_request(order, self.recv_window)?;
         let data = self.client.post_signed(API_V3_ORDER_TEST, &request).await?;
         let _: TestResponse = from_str(data.as_str())?;
@@ -476,7 +476,7 @@ impl Account {
         Ok(trade_history)
     }
 
-    async fn build_order(&self, order: OrderRequest) -> BTreeMap<String, String> {
+    fn build_order(&self, order: OrderRequest) -> BTreeMap<String, String> {
         let mut order_parameters: BTreeMap<String, String> = BTreeMap::new();
 
         order_parameters.insert("symbol".into(), order.symbol);
