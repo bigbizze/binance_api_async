@@ -4,6 +4,7 @@ use serde_json::Value;
 use serde::*;
 use std::fmt::Display;
 use crate::failure::_core::fmt::Formatter;
+use crate::failure::_core::num::ParseFloatError;
 
 #[derive(Debug, Deserialize)]
 pub struct BinanceContentError {
@@ -41,7 +42,9 @@ pub enum BinanceErr {
     #[fail(display = "Invalid Header value {}", _0)]
     InvalidHeaderValue(#[fail(cause)] reqwest::header::InvalidHeaderValue),
     #[fail(display = "System Time error {}", _0)]
-    SystemTimeError(#[fail(cause)] std::time::SystemTimeError)
+    SystemTimeError(#[fail(cause)] std::time::SystemTimeError),
+    #[fail(display = "Parse Float error {}", _0)]
+    ParseFloatError(#[fail(cause)] std::num::ParseFloatError)
 
 }
 
@@ -80,5 +83,11 @@ impl From<reqwest::header::InvalidHeaderValue> for BinanceErr {
 impl From<std::time::SystemTimeError> for BinanceErr {
     fn from(err: std::time::SystemTimeError) -> Self {
         BinanceErr::SystemTimeError(err)
+    }
+}
+
+impl From<std::num::ParseFloatError> for BinanceErr {
+    fn from(err: ParseFloatError) -> Self {
+        BinanceErr::ParseFloatError(err)
     }
 }

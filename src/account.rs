@@ -1,11 +1,12 @@
 use crate::util::*;
 use crate::model::*;
-// use crate::client::*;
+
 use crate::error::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use serde_json::from_str;
 use crate::client::Client;
-// use crate::error::APIError;
+use crate::general::General;
+use crate::api::Binance;
 
 static ORDER_TYPE_LIMIT: &str = "LIMIT";
 static ORDER_TYPE_MARKET: &str = "MARKET";
@@ -24,16 +25,25 @@ static API_V3_ORDER_TEST: &str = "/api/v3/order/test";
 pub struct Account {
     pub client: Client,
     pub recv_window: u64,
+    pub(crate) precisions_map: Option<HashMap<String, SymbolInfo>>,
 }
 
 struct OrderRequest {
     pub symbol: String,
-    pub qty: f64,
-    pub price: f64,
+    pub qty: String,
+    pub price: Option<String>,
     pub order_side: String,
     pub order_type: String,
     pub time_in_force: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct SymbolInfo {
+    pub(crate) quantity_precision: usize,
+    pub(crate) price_precision: usize,
+}
+
+pub type SymbolPrecision = HashMap<String, SymbolInfo>;
 
 impl Account {
     // Account Information
@@ -155,9 +165,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let buy: OrderRequest = OrderRequest {
-            symbol: symbol.into(),
-            qty: qty.into(),
+            symbol,
+            qty,
             price,
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
@@ -179,9 +191,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
+            qty,
             price,
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
@@ -201,9 +215,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
+            qty,
             price,
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
@@ -225,9 +241,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
+            qty,
             price,
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
@@ -247,10 +265,12 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), None);
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
-            price: 0.0,
+            qty,
+            price,
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -271,10 +291,12 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), None);
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
-            price: 0.0,
+            qty,
+            price,
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -293,10 +315,12 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), None);
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
-            price: 0.0,
+            qty,
+            price,
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -317,10 +341,12 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), None);
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
-            price: 0.0,
+            qty,
+            price,
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -348,9 +374,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
+            qty,
             price,
             order_side: order_side.into(),
             order_type: order_type.into(),
@@ -381,9 +409,11 @@ impl Account {
         S: Into<String>,
         F: Into<f64>,
     {
+        let symbol = symbol.into();
+        let (qty, price) = self.sometimes_precise_quantity_and_price(&symbol, qty.into(), Some(price));
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
-            qty: qty.into(),
+            qty,
             price,
             order_side: order_side.into(),
             order_type: order_type.into(),
@@ -452,13 +482,71 @@ impl Account {
         order_parameters.insert("symbol".into(), order.symbol);
         order_parameters.insert("side".into(), order.order_side);
         order_parameters.insert("type".into(), order.order_type);
-        order_parameters.insert("quantity".into(), order.qty.to_string());
-
-        if order.price != 0.0 {
-            order_parameters.insert("price".into(), order.price.to_string());
+        order_parameters.insert("quantity ".into(), order.qty);
+        if let Some(order_price) = order.price {
+            order_parameters.insert("price".into(), order_price);
             order_parameters.insert("timeInForce".into(), order.time_in_force);
         }
 
         order_parameters
+    }
+
+    fn sometimes_precise_quantity_and_price(&self, symbol: &String, qty: f64, price: Option<f64>) -> (String, Option<String>) {
+        if let Some(p_map) = &self.precisions_map {
+            if let Some(precision) = p_map.get(symbol) {
+                let precise_qty = format!("{:.1$}", qty, precision.quantity_precision);
+                let precise_price = if let Some(price) = price {
+                    if price != 0.0 {
+                        Some(format!("{:.1$}", price, precision.price_precision))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                return (precise_qty, precise_price);
+            }
+        }
+        (qty.to_string(), if let Some(price) = price {
+            Some(price.to_string())
+        } else {
+            None
+        })
+    }
+
+    fn get_one_symbol_info(symbol_info: &Symbol) -> Result<SymbolInfo, BinanceErr> {
+        let price_precision = symbol_info.quote_precision as usize;
+        if &symbol_info.filters.len() < &3 {
+            return Err(BinanceErr::Other(format!("Binance exchange info didn't return enough filters!")))
+        }
+        let lot_size = &symbol_info.filters[2];
+        let quantity_precision: usize = match lot_size {
+            Filters::LotSize { step_size, .. } => Ok(-step_size.parse::<f64>()?.log10() as usize),
+            _ => Err(BinanceErr::Other(format!("There was no lot size!"))),
+        }?;
+        Ok(SymbolInfo {
+            price_precision,
+            quantity_precision,
+        })
+    }
+
+    async fn get_exchange_info_binance() -> Result<SymbolPrecision, BinanceErr> {
+        let client: General = Binance::new(None, None);
+        let exchange_info = client.exchange_info().await?;
+        let mut exchange_info_map = HashMap::<String, SymbolInfo>::new();
+        let symbols = exchange_info.symbols.iter().filter(|s| s.status != "BREAK");
+        for symbol in symbols {
+            exchange_info_map.insert(
+                symbol.symbol.to_string(),
+                Account::get_one_symbol_info(symbol)?,
+            );
+        }
+        Ok(exchange_info_map)
+    }
+
+    pub async fn load_symbol_precisions(&mut self) -> Result<(), BinanceErr> {
+        let exchange_info = Account::get_exchange_info_binance().await?;
+        self.precisions_map = Some(exchange_info);
+        Ok(())
     }
 }
