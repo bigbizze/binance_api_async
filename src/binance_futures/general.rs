@@ -3,7 +3,6 @@ use serde_json::from_str;
 use crate::binance_futures::model::*;
 use crate::client::*;
 use crate::error::*;
-use crate::error::other_err::BinanceMiscError;
 
 #[derive(Clone)]
 pub struct FuturesGeneral {
@@ -47,7 +46,7 @@ impl FuturesGeneral {
                         return Ok(item);
                     }
                 }
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Symbol not found"))))
+                Err(BinanceErr::from_str(format!("Symbol not found")))
             }
             Err(e) => Err(e),
         }

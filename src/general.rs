@@ -2,7 +2,6 @@ use serde_json::from_str;
 
 use crate::client::*;
 use crate::error::*;
-use crate::error::other_err::BinanceMiscError;
 use crate::model::*;
 
 #[derive(Clone)]
@@ -50,7 +49,7 @@ impl General {
                         return Ok(item);
                     }
                 }
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Symbol not found"))))
+                Err(BinanceErr::from_str(format!("Symbol not found")))
             }
             Err(e) => Err(e),
         }

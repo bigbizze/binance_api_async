@@ -5,7 +5,6 @@ use serde_json::from_str;
 use crate::client::Client;
 // use crate::client::*;
 use crate::error::*;
-use crate::error::other_err::BinanceMiscError;
 use crate::model::*;
 use crate::util::*;
 
@@ -64,7 +63,7 @@ impl Account {
                         return Ok(balance);
                     }
                 }
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Asset not found"))))
+                Err(BinanceErr::from_str(format!("Asset not found")))
             }
             Err(e) => Err(e),
         }

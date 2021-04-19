@@ -147,19 +147,19 @@ impl Client {
                 Ok(response.text().await?)
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Internal Server Error"))))
+                Err(BinanceErr::from_str(format!("Internal Server Error")))
             }
             StatusCode::SERVICE_UNAVAILABLE => {
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Service Unavailable"))))
+                Err(BinanceErr::from_str(format!("Service Unavailable")))
             }
             StatusCode::UNAUTHORIZED => {
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Unauthorized"))))
+                Err(BinanceErr::from_str(format!("Unauthorized")))
             }
             StatusCode::BAD_REQUEST => {
                 Err(BinanceErr::BinanceContentError(response.json::<BinanceContentError>().await?))
             }
             s => {
-                Err(BinanceErr::Other(BinanceMiscError::from(format!("Received response: {:?}", s))))
+                Err(BinanceErr::from_str(format!("Received response: {:?}", s)))
             }
         }
     }

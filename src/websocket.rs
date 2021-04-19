@@ -13,7 +13,6 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::error::*;
-use crate::error::other_err::BinanceMiscError;
 use crate::model::*;
 
 type WSStream = WebSocketStream<tokio_tungstenite::stream::Stream<TcpStream, tokio_native_tls::TlsStream<TcpStream>>>;
@@ -196,7 +195,7 @@ impl Websocket {
                 let data = format!("{}", value["data"]);
                 self.parse_response_type(&data)?
             } else {
-                return Err(BinanceErr::Other(BinanceMiscError::from(format!("Websocket closed!"))));
+                return Err(BinanceErr::from_str(format!("Websocket closed!")));
             }
         } else if value["u"] != serde_json::Value::Null
             && value["s"] != serde_json::Value::Null
@@ -248,7 +247,7 @@ impl Websocket {
         return match msg {
             Message::Text(msg) => self.parse_response_type(&msg),
             Message::Ping(_) | Message::Pong(_) | Message::Binary(_) => Ok(WebsocketEvent::None),
-            Message::Close(_) => Err(BinanceErr::Other(BinanceMiscError::from(format!("Websocket closed!"))))
+            Message::Close(_) => Err(BinanceErr::from_str(format!("Websocket closed!")))
         };
     }
 }

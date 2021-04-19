@@ -52,6 +52,9 @@ pub enum BinanceErr {
 }
 
 impl BinanceErr {
+    pub fn from_str(msg: String) -> Self {
+        BinanceErr::Other(BinanceMiscError::from(msg))
+    }
     pub fn get_fmt_error(&mut self) -> String {
         match self {
             BinanceErr::Serde(e) => format!("{}", e),
