@@ -1,6 +1,6 @@
 [package]
 name = "binance_api_async"
-version = "0.1.6"
+version = "0.1.6.1"
 authors = ["Charles Anderson <hpcngmoh@gmail.com>"]
 edition = "2018"
 description = "Binance API async implementation using tokio"
@@ -9,8 +9,7 @@ documentation = "https://github.com/bigbizze/binance_api_async/blob/master/READM
 repository = "https://github.com/bigbizze/binance_api_async"
 readme = "README.md"
 license = "MIT"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-#exclude = ["."]
+
 [dependencies]
 hex = "0.4"
 hmac = "0.10.1"
@@ -23,7 +22,6 @@ url = "2.1.1"
 tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
 tungstenite = "0.13.0"
 streamunordered = "0.5"
-failure = "0.1.7"
 pin-project = "1.0.5"
 uuid = { version = "0.8", features = [ "v4", "serde" ] }
 tokio-native-tls = "0.3.0"

@@ -1,6 +1,4 @@
 #![feature(backtrace)]
-#[macro_use]
-pub extern crate failure;
 pub extern crate futures;
 
 pub mod error;
