@@ -1,12 +1,11 @@
 use hex::encode as hex_encode;
 use hmac::{Hmac, Mac, NewMac};
-use reqwest::{StatusCode, Response};
-
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
+use reqwest::{Response, StatusCode};
+use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 use sha2::Sha256;
 
-use crate::error::{BinanceErr, BinanceContentError};
-
+use crate::error::BinanceErr;
+use crate::error::other_err::*;
 
 #[derive(Clone)]
 pub struct Client {
@@ -146,21 +145,21 @@ impl Client {
         match response.status() {
             StatusCode::OK => {
                 Ok(response.text().await?)
-            },
+            }
             StatusCode::INTERNAL_SERVER_ERROR => {
-                Err(BinanceErr::Other(format!("Internal Server Error")))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Internal Server Error"))))
             }
             StatusCode::SERVICE_UNAVAILABLE => {
-                Err(BinanceErr::Other(format!("Service Unavailable")))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Service Unavailable"))))
             }
             StatusCode::UNAUTHORIZED => {
-                Err(BinanceErr::Other(format!("Unauthorized")))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Unauthorized"))))
             }
             StatusCode::BAD_REQUEST => {
-                Err(BinanceErr::BinanceContent(response.json::<BinanceContentError>().await?))
+                Err(BinanceErr::BinanceContentError(response.json::<BinanceContentError>().await?))
             }
             s => {
-                Err(BinanceErr::Other(format!("Received response: {:?}", s)))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Received response: {:?}", s))))
             }
         }
     }

@@ -1,24 +1,20 @@
-use tokio_tungstenite::WebSocketStream;
-use tokio::net::TcpStream;
-use crate::model::*;
-use serde::*;
-
-use url::Url;
-use tokio_tungstenite::{connect_async, tungstenite::Message};
-
-use crate::error::BinanceErr;
-
 use std::collections::HashMap;
-use streamunordered::{StreamUnordered, StreamYield};
-use pin_project::*;
-use uuid::Uuid;
-
-use futures::{prelude::*, StreamExt, SinkExt, stream::SplitStream};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use futures::{prelude::*, SinkExt, stream::SplitStream, StreamExt};
+use pin_project::*;
+use serde::*;
+use streamunordered::{StreamUnordered, StreamYield};
+use tokio::net::TcpStream;
+use tokio_tungstenite::{connect_async, tungstenite::Message};
+use tokio_tungstenite::WebSocketStream;
+use url::Url;
+use uuid::Uuid;
 
-
+use crate::error::*;
+use crate::error::other_err::BinanceMiscError;
+use crate::model::*;
 
 type WSStream = WebSocketStream<tokio_tungstenite::stream::Stream<TcpStream, tokio_native_tls::TlsStream<TcpStream>>>;
 pub type StoredStream = SplitStream<WSStream>;
@@ -40,29 +36,29 @@ impl ExchangeSettings {
         match stream_type {
             WebsocketStreamType::IndividualTrade(s) => {
                 s.into_iter().map(|e| format!("{}@trade", e.to_lowercase())).collect()
-            },
+            }
             WebsocketStreamType::AggregatedTrades(s) => {
                 s.into_iter().map(|e| format!("{}@aggTrade", e.to_lowercase())).collect()
-            },
+            }
             WebsocketStreamType::TwentyFourHourTicker(s) => {
                 s.into_iter().map(|e| format!("{}@24hrTicker", e.to_lowercase())).collect()
-            },
+            }
             WebsocketStreamType::DayTickerAll => {
                 vec![format!("!ticker@arr")]
-            },
+            }
             WebsocketStreamType::Kline { symbols: s, mut interval } => {
                 let interval = interval.format_interval();
                 s.into_iter().map(|e| format!("{}@kline_{}", e.to_lowercase(), interval)).collect()
-            },
+            }
             WebsocketStreamType::PartialBookDepthStream(s) => {
                 s.into_iter().map(|e| format!("{}@lastUpdateId", e.to_lowercase())).collect()
-            },
+            }
             WebsocketStreamType::DiffDepthStream(s) => {
                 s.into_iter().map(|e| format!("{}@depthUpdate", e.to_lowercase())).collect()
-            },
+            }
             WebsocketStreamType::BookTicker(s) => {
                 s.into_iter().map(|e| format!("{}@bookTicker", e.to_lowercase())).collect()
-            },
+            }
             _ => vec![]
         }
     }
@@ -70,11 +66,11 @@ impl ExchangeSettings {
 
 impl From<WebsocketStreamType> for ExchangeSettings {
     fn from(f: WebsocketStreamType) -> Self {
-        let params =  ExchangeSettings::map_symbols_to_stream_params(f);
+        let params = ExchangeSettings::map_symbols_to_stream_params(f);
         ExchangeSettings {
             method: METHOD,
             params,
-            id: 1
+            id: 1,
         }
     }
 }
@@ -85,7 +81,7 @@ pub enum KlineInterval {
     Days(u16),
     Weeks(u16),
     Months(u16),
-    None
+    None,
 }
 
 impl KlineInterval {
@@ -110,7 +106,7 @@ pub enum WebsocketStreamType {
     Kline { symbols: Vec<String>, interval: KlineInterval },
     DiffDepthStream(Vec<String>),
     DayTickerAll,
-    UserStream(String)
+    UserStream(String),
 }
 
 pub enum UserDataStreamType {
@@ -163,7 +159,7 @@ pub enum WebsocketEvent {
     AccountUpdate(AccountUpdateEvent),
     OrderUpdate(OrderTradeEvent),
     BalanceUpdate(BalanceUpdateEvent),
-    None
+    None,
 }
 
 const STREAM: &'static str = "stream";
@@ -200,7 +196,7 @@ impl Websocket {
                 let data = format!("{}", value["data"]);
                 self.parse_response_type(&data)?
             } else {
-                return Err(BinanceErr::Other(format!("Websocket closed!")))
+                return Err(BinanceErr::Other(BinanceMiscError::from(format!("Websocket closed!"))));
             }
         } else if value["u"] != serde_json::Value::Null
             && value["s"] != serde_json::Value::Null
@@ -230,7 +226,7 @@ impl Websocket {
             if let Some(single_value) = &self.subscribe_single_value {
                 if single_value == "!ticker@arr" {
                     let trades: Vec<DayTickerEvent> = serde_json::from_str(msg)?;
-                    return Ok(WebsocketEvent::DayTickerAll(trades))
+                    return Ok(WebsocketEvent::DayTickerAll(trades));
                 }
             }
             let trades: DayTickerEvent = serde_json::from_str(msg)?;
@@ -252,9 +248,8 @@ impl Websocket {
         return match msg {
             Message::Text(msg) => self.parse_response_type(&msg),
             Message::Ping(_) | Message::Pong(_) | Message::Binary(_) => Ok(WebsocketEvent::None),
-            Message::Close(_) => Err(BinanceErr::Other(format!("Websocket closed!")))
+            Message::Close(_) => Err(BinanceErr::Other(BinanceMiscError::from(format!("Websocket closed!"))))
         };
-
     }
 }
 
@@ -325,8 +320,8 @@ impl Stream for Websocket {
 #[cfg(test)]
 mod tests {
     use futures::TryStreamExt;
-    use crate::error::BinanceErr;
 
+    use crate::error::BinanceErr;
     use crate::websocket::*;
 
     fn correct_symbol(res: WebsocketEvent) -> bool {

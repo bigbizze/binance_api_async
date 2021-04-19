@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use crate::model::string_or_float;
 
 pub use crate::model::{
     Asks, Bids, BookTickers, Filters, KlineSummaries, KlineSummary, RateLimit, ServerTime,
     SymbolPrice, Tickers,
 };
+use crate::model::string_or_float;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

@@ -1,10 +1,14 @@
-use crate::util::*;
-use crate::model::*;
+use std::collections::BTreeMap;
+
+use serde_json::from_str;
+
+use crate::client::Client;
 // use crate::client::*;
 use crate::error::*;
-use std::collections::BTreeMap;
-use serde_json::from_str;
-use crate::client::Client;
+use crate::error::other_err::BinanceMiscError;
+use crate::model::*;
+use crate::util::*;
+
 // use crate::error::APIError;
 
 static ORDER_TYPE_LIMIT: &str = "LIMIT";
@@ -49,8 +53,8 @@ impl Account {
 
     // Balance for ONE Asset
     pub async fn get_balance<S>(&self, asset: S) -> Result<Balance, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         match self.get_account().await {
             Ok(account) => {
@@ -60,7 +64,7 @@ impl Account {
                         return Ok(balance);
                     }
                 }
-                Err(BinanceErr::Other(format!("Asset not found")))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Asset not found"))))
             }
             Err(e) => Err(e),
         }
@@ -68,8 +72,8 @@ impl Account {
 
     // Current open orders for ONE symbol
     pub async fn get_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -103,8 +107,8 @@ impl Account {
     }
     // Cancel all open orders for ONE symbol
     pub async fn cancel_all_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -117,8 +121,8 @@ impl Account {
 
     // Check an order's status
     pub async fn order_status<S>(&self, symbol: S, order_id: u64) -> Result<Order, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -135,8 +139,8 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_order_status<S>(&self, symbol: S, order_id: u64) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -151,9 +155,9 @@ impl Account {
 
     // Place a LIMIT order - BUY
     pub async fn limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -175,9 +179,9 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -197,9 +201,9 @@ impl Account {
 
     // Place a LIMIT order - SELL
     pub async fn limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -221,9 +225,9 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -243,9 +247,9 @@ impl Account {
 
     // Place a MARKET order - BUY
     pub async fn market_buy<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -267,9 +271,9 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_market_buy<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -289,9 +293,9 @@ impl Account {
 
     // Place a MARKET order - SELL
     pub async fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -313,9 +317,9 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_market_sell<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -344,9 +348,9 @@ impl Account {
         order_type: S,
         execution_type: S,
     ) -> Result<Transaction, BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -377,9 +381,9 @@ impl Account {
         order_type: S,
         execution_type: S,
     ) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
-        F: Into<f64>,
+        where
+            S: Into<String>,
+            F: Into<f64>,
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
@@ -399,8 +403,8 @@ impl Account {
 
     // Check an order's status
     pub async fn cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<OrderCanceled, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -417,8 +421,8 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_cancel_order<S>(&self, symbol: S, order_id: u64) -> Result<(), BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -433,8 +437,8 @@ impl Account {
 
     // Trade history
     pub async fn trade_history<S>(&self, symbol: S) -> Result<Vec<TradeHistory>, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());

@@ -1,10 +1,10 @@
 use crate::account::*;
-use crate::market::*;
-use crate::general::*;
 use crate::binance_futures::general::*;
 use crate::binance_futures::market::*;
-use crate::userstream::*;
 use crate::client::*;
+use crate::general::*;
+use crate::market::*;
+use crate::userstream::*;
 use crate::websocket::Websocket;
 
 static API_HOST: &str = "https://api.binance.com";
@@ -46,7 +46,7 @@ impl Binance for UserStream {
         UserStream {
             client: Client::new(api_key, secret_key, API_HOST.to_string()),
             recv_window: 5000,
-            ws: None
+            ws: None,
         }
     }
 }

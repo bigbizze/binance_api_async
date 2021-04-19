@@ -1,8 +1,9 @@
-use crate::model::*;
+use serde_json::from_str;
+
 use crate::client::*;
 use crate::error::*;
-
-use serde_json::from_str;
+use crate::error::other_err::BinanceMiscError;
+use crate::model::*;
 
 #[derive(Clone)]
 pub struct General {
@@ -38,8 +39,8 @@ impl General {
 
     // Get Symbol information
     pub async fn get_symbol_info<S>(&self, symbol: S) -> Result<Symbol, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let upper_symbol = symbol.into().to_uppercase();
         match self.exchange_info().await {
@@ -49,7 +50,7 @@ impl General {
                         return Ok(item);
                     }
                 }
-                Err(BinanceErr::Other(format!("Symbol not found")))
+                Err(BinanceErr::Other(BinanceMiscError::from(format!("Symbol not found"))))
             }
             Err(e) => Err(e),
         }

@@ -1,9 +1,11 @@
-use crate::util::*;
-use crate::model::*;
+use std::collections::BTreeMap;
+
+use serde_json::{from_str, Value};
+
 use crate::client::*;
 use crate::error::*;
-use std::collections::BTreeMap;
-use serde_json::{Value, from_str};
+use crate::model::*;
+use crate::util::*;
 
 #[derive(Clone)]
 pub struct Market {
@@ -15,8 +17,8 @@ pub struct Market {
 impl Market {
     // Order book (Default 100; max 100)
     pub async fn get_depth<S>(&self, symbol: S) -> Result<OrderBook, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
@@ -41,8 +43,8 @@ impl Market {
 
     // Latest price for ONE symbol.
     pub async fn get_price<S>(&self, symbol: S) -> Result<SymbolPrice, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
@@ -57,8 +59,8 @@ impl Market {
 
     // Average price for ONE symbol.
     pub async fn get_average_price<S>(&self, symbol: S) -> Result<AveragePrice, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
@@ -83,8 +85,8 @@ impl Market {
 
     // -> Best price/qty on the order book for ONE symbol
     pub async fn get_book_ticker<S>(&self, symbol: S) -> Result<Tickers, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
@@ -99,8 +101,8 @@ impl Market {
 
     // 24hr ticker price change statistics
     pub async fn get_24h_price_stats<S>(&self, symbol: S) -> Result<PriceStats, BinanceErr>
-    where
-        S: Into<String>,
+        where
+            S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
@@ -119,12 +121,12 @@ impl Market {
     pub async fn get_klines<S1, S2, S3, S4, S5>(
         &self, symbol: S1, interval: S2, limit: S3, start_time: S4, end_time: S5,
     ) -> Result<KlineSummaries, BinanceErr>
-    where
-        S1: Into<String>,
-        S2: Into<String>,
-        S3: Into<Option<u16>>,
-        S4: Into<Option<u64>>,
-        S5: Into<Option<u64>>,
+        where
+            S1: Into<String>,
+            S2: Into<String>,
+            S3: Into<Option<u16>>,
+            S4: Into<Option<u64>>,
+            S5: Into<Option<u64>>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 

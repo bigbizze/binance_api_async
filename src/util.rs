@@ -1,7 +1,10 @@
-use crate::error::*;
 use std::collections::BTreeMap;
 use std::time::{SystemTime, UNIX_EPOCH};
+
 use serde_json::Value;
+
+use crate::error::*;
+use crate::error::other_err::BinanceMiscError;
 
 pub fn build_request(parameters: &BTreeMap<String, String>) -> String {
     let mut request = String::new();
@@ -33,7 +36,7 @@ pub fn build_signed_request(
 
         Ok(request)
     } else {
-        Err(BinanceErr::Other(format!("Failed to get timestamp")))
+        Err(BinanceErr::Other(BinanceMiscError::from(format!("Failed to get timestamp"))))
     }
 }
 

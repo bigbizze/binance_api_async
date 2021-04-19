@@ -139,6 +139,7 @@ async fn main() -> Result<(), BinanceErr> {
     }
 
     user_stream.unsubscribe(sub_id);
+    Ok(())
 }
 ```
 
@@ -221,5 +222,35 @@ async fn main() -> Result<(), BinanceErr> {
     let balances = account.get_balance("KNC").await?;
 
     let trade_history = account.trade_history("WTCETH").await?;
+    
+    Ok(())
+}
+```
+
+### Errors
+"get_fmt_error" is a method on the generic error type exposed by this library "BinanceErr" which returns the formatted error message.
+
+This method is superfluous and only exists to circumvent issues IntelliJ IDEs have understanding that std::fmt::Display is in fact implemented.
+```rust
+use binance_api_async::api::Binance;
+use binance_api_async::account::Account;
+
+#[tokio::main]
+async fn main() -> Result<(), BinanceErr> {
+    let account: Account = Binance::new(Some(format!("<api-key>")), Some(format!("<API-SECRET>")));
+    match account.market_buy(format!("DOGEBTC"), 101).await {
+        Err(e) => {
+            println!("{}", e);
+        },
+        _ => {}
+    }
+    // If you are getting "std::fmt::Display not implemented for BinanceErr"
+    match account.market_buy(format!("DOGEBTC"), 101).await {
+        Err(mut e) => {
+            println!("{}", e.get_fmt_error());
+        },
+        _ => {}
+    }
+    Ok(())
 }
 ```

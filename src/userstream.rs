@@ -1,12 +1,10 @@
-use crate::model::*;
-use crate::client::*;
-use crate::error::*;
 use serde_json::from_str;
-use crate::websocket::*;
 use uuid::Uuid;
 
-
-
+use crate::client::*;
+use crate::error::*;
+use crate::model::*;
+use crate::websocket::*;
 
 static USER_DATA_STREAM: &str = "/api/v3/userDataStream";
 
@@ -14,7 +12,7 @@ static USER_DATA_STREAM: &str = "/api/v3/userDataStream";
 pub struct UserStream {
     pub client: Client,
     pub recv_window: u64,
-    pub ws: Option<Websocket>
+    pub ws: Option<Websocket>,
 }
 
 #[async_trait::async_trait]

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+
 use crate::websocket::WebsocketEvent;
 
 #[derive(Serialize, Deserialize)]
@@ -186,6 +187,7 @@ pub struct FillInfo {
     pub commission_asset: String,
     pub trade_id: Option<u64>,
 }
+
 /// Response to a test order (endpoint /api/v3/order/test).
 ///
 /// Currently, the API responds {} on a successfull test transaction,
@@ -744,7 +746,7 @@ pub struct DepthOrderBookEvent {
 pub(crate) mod string_or_float {
     use std::fmt;
 
-    use serde::{de, Serializer, Deserialize, Deserializer};
+    use serde::{de, Deserialize, Deserializer, Serializer};
 
     pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
         where
