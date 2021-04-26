@@ -101,8 +101,7 @@ impl Market {
 
     // 24hr ticker price change statistics
     pub async fn get_24h_price_stats<S>(&self, symbol: S) -> Result<PriceStats, BinanceErr>
-        where
-            S: Into<String>,
+        where S: Into<String>
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 

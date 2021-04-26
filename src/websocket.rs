@@ -273,7 +273,9 @@ impl WebsocketAsync for Websocket {
 
         let (mut sink, read) = ws_stream.split();
 
-        if let WebsocketStreamType::UserStream(_) = stream_type {} else {
+        if let WebsocketStreamType::UserStream(_) = stream_type {
+
+        } else {
             let sub = ExchangeSettings::from(stream_type);
             sink.send(Message::Text(serde_json::to_string(&sub)?)).await?;
         }

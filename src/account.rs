@@ -31,12 +31,14 @@ pub struct Account {
 
 struct OrderRequest {
     pub symbol: String,
-    pub qty: f64,
-    pub price: f64,
+    pub qty: String,
+    pub price: String,
     pub order_side: String,
     pub order_type: String,
     pub time_in_force: String,
 }
+
+static NOTHING_FLOAT: &str = "0.0";
 
 impl Account {
     // Account Information
@@ -71,8 +73,7 @@ impl Account {
 
     // Current open orders for ONE symbol
     pub async fn get_open_orders<S>(&self, symbol: S) -> Result<Vec<Order>, BinanceErr>
-        where
-            S: Into<String>,
+        where S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -120,8 +121,7 @@ impl Account {
 
     // Check an order's status
     pub async fn order_status<S>(&self, symbol: S, order_id: u64) -> Result<Order, BinanceErr>
-        where
-            S: Into<String>,
+        where S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -138,8 +138,7 @@ impl Account {
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
     pub async fn test_order_status<S>(&self, symbol: S, order_id: u64) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
+        where S: Into<String>,
     {
         let mut parameters: BTreeMap<String, String> = BTreeMap::new();
         parameters.insert("symbol".into(), symbol.into());
@@ -153,15 +152,13 @@ impl Account {
     }
 
     // Place a LIMIT order - BUY
-    pub async fn limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn limit_buy<S, F>(&self, symbol: S, qty: S, price: S) -> Result<Transaction, BinanceErr>
+        where S: Into<String>
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -177,15 +174,13 @@ impl Account {
     /// Place a test limit order - BUY
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_limit_buy<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn test_limit_buy<S, F>(&self, symbol: S, qty: S, price: S) -> Result<(), BinanceErr>
+        where S: Into<String>
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -199,15 +194,13 @@ impl Account {
     }
 
     // Place a LIMIT order - SELL
-    pub async fn limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<Transaction, BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn limit_sell<S>(&self, symbol: S, qty: S, price: S) -> Result<Transaction, BinanceErr>
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -223,15 +216,13 @@ impl Account {
     /// Place a test LIMIT order - SELL
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_limit_sell<S, F>(&self, symbol: S, qty: F, price: f64) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn test_limit_sell<S>(&self, symbol: S, qty: S, price: S) -> Result<(), BinanceErr>
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_LIMIT.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -245,15 +236,13 @@ impl Account {
     }
 
     // Place a MARKET order - BUY
-    pub async fn market_buy<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn market_buy<S>(&self, symbol: S, qty: S) -> Result<Transaction, BinanceErr>
+        where S: Into<String>
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price: 0.0,
+            price: String::from(NOTHING_FLOAT),
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -269,15 +258,13 @@ impl Account {
     /// Place a test MARKET order - BUY
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_market_buy<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn test_market_buy<S>(&self, symbol: S, qty: S) -> Result<(), BinanceErr>
+        where S: Into<String>
     {
         let buy: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price: 0.0,
+            price: String::from(NOTHING_FLOAT),
             order_side: ORDER_SIDE_BUY.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -291,15 +278,13 @@ impl Account {
     }
 
     // Place a MARKET order - SELL
-    pub async fn market_sell<S, F>(&self, symbol: S, qty: F) -> Result<Transaction, BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn market_sell<S>(&self, symbol: S, qty: S) -> Result<Transaction, BinanceErr>
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price: 0.0,
+            price: String::from(NOTHING_FLOAT),
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -315,15 +300,13 @@ impl Account {
     /// Place a test MARKET order - SELL
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_market_sell<S, F>(&self, symbol: S, qty: F) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+    pub async fn test_market_sell<S>(&self, symbol: S, qty: S) -> Result<(), BinanceErr>
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price: 0.0,
+            price: String::from(NOTHING_FLOAT),
             order_side: ORDER_SIDE_SELL.to_string(),
             order_type: ORDER_TYPE_MARKET.to_string(),
             time_in_force: TIME_IN_FORCE_GTC.to_string(),
@@ -338,23 +321,21 @@ impl Account {
 
 
     /// Place a custom order
-    pub async fn custom_order<S, F>(
+    pub async fn custom_order<S>(
         &self,
         symbol: S,
-        qty: F,
-        price: f64,
+        qty: S,
+        price: S,
         order_side: S,
         order_type: S,
         execution_type: S,
     ) -> Result<Transaction, BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: order_side.into(),
             order_type: order_type.into(),
             time_in_force: execution_type.into(),
@@ -371,23 +352,21 @@ impl Account {
     /// Place a test custom order
     ///
     /// This order is sandboxed: it is validated, but not sent to the matching engine.
-    pub async fn test_custom_order<S, F>(
+    pub async fn test_custom_order<S>(
         &self,
         symbol: S,
-        qty: F,
-        price: f64,
+        qty: S,
+        price: S,
         order_side: S,
         order_type: S,
         execution_type: S,
     ) -> Result<(), BinanceErr>
-        where
-            S: Into<String>,
-            F: Into<f64>,
+        where S: Into<String>
     {
         let sell: OrderRequest = OrderRequest {
             symbol: symbol.into(),
             qty: qty.into(),
-            price,
+            price: price.into(),
             order_side: order_side.into(),
             order_type: order_type.into(),
             time_in_force: execution_type.into(),
@@ -455,10 +434,10 @@ impl Account {
         order_parameters.insert("symbol".into(), order.symbol);
         order_parameters.insert("side".into(), order.order_side);
         order_parameters.insert("type".into(), order.order_type);
-        order_parameters.insert("quantity".into(), order.qty.to_string());
+        order_parameters.insert("quantity".into(), order.qty);
 
-        if order.price != 0.0 {
-            order_parameters.insert("price".into(), order.price.to_string());
+        if order.price != String::from(NOTHING_FLOAT) {
+            order_parameters.insert("price".into(), order.price);
             order_parameters.insert("timeInForce".into(), order.time_in_force);
         }
 
